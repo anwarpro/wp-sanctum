@@ -1,0 +1,59 @@
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress_dev
+    ports:
+      - "8000:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_DEBUG', true);
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+        define('SCRIPT_DEBUG', true);
+        define('MY_PLUGIN_ENV', 'development');
+    volumes:
+      - .:/var/www/html/wp-content/plugins/wp-sanctum
+      - ./wp-content/themes:/var/www/html/wp-content/themes
+#      - ./wp-config-docker.php:/var/www/html/wp-config.php
+    depends_on:
+      - db
+    networks:
+      - wp-network
+
+  db:
+    image: mariadb:latest
+    container_name: wordpress_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wp-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: wordpress
+      PMA_PASSWORD: wordpress
+    depends_on:
+      - db
+    networks:
+      - wp-network
+
+volumes:
+  db_data:
+
+networks:
+  wp-network:
+    driver: bridge
